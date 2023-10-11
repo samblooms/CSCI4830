@@ -42,7 +42,13 @@ public class InventoryController extends HttpServlet {
     // Separated logic for viewing items into its own method
     private void viewItems(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<Item> items = UtilInventoryManagement.listItems();
+        String sort = request.getParameter("sort");
+        String order = request.getParameter("order");
+        String minQuantity = request.getParameter("minQuantity");
+        String maxQuantity = request.getParameter("maxQuantity");
+        String search = request.getParameter("search");
+        
+        List<Item> items = UtilInventoryManagement.listItems(sort, order, minQuantity, maxQuantity, search);
         request.setAttribute("items", items);
         RequestDispatcher dispatcher = request.getRequestDispatcher("view-items.jsp");
         dispatcher.forward(request, response);
