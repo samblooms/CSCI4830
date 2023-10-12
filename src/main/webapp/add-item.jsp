@@ -8,6 +8,11 @@
 </head>
 <body>
     <div class="container">
+    	<nav>
+        	<a href="index.jsp" class="button">Back to Main Menu</a>
+            <a href="InventoryController?action=view" class="button">View All Items</a>
+            <a href="InventoryController?action=view" class="button">Edit Items</a>
+        </nav>
         <h1>Add New Item</h1>
         <% String error = (String) request.getAttribute("error"); %>
         <% if (error != null) { %>
@@ -29,10 +34,6 @@
             <input type="submit" value="Add Item" class="button">
             <input type="hidden" name="action" value="add">
         </form>
-        <nav>
-            <a href="InventoryController?action=view" class="button">View All Items</a>
-            <a href="index.jsp" class="button">Back to Main Menu</a>
-        </nav>
     </div>
 </body>
 </html>

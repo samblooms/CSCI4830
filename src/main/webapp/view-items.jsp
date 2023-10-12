@@ -10,6 +10,11 @@
 </head>
 <body>
     <div class="container">
+    	<nav>
+	        <a class="button" href="index.jsp">Back to Main Menu</a>
+	        <a class="button" href="add-item.jsp">Add New Item</a>
+	        <a class="button" href="InventoryController?action=edit">Edit Items</a>
+        </nav>
         <h1>All Items</h1>
         
         <!-- Form for Sorting, Filtering, and Searching -->
@@ -19,8 +24,8 @@
 			<select name="sort" class="form-control">
 			    <option value="id">ID</option>
 			    <option value="name">Name</option>
-			    <option value="quantity">Quantity</option> <!-- Added line -->
-			    <option value="price">Price</option> <!-- Added line -->
+			    <option value="quantity">Quantity</option>
+			    <option value="price">Price</option>
 			</select>
 		    
 		    <label for="order">Order:</label>
@@ -29,7 +34,7 @@
 		        <option value="desc">Descending</option>
 		    </select>
 		    
-		    <!-- Filtering (Example for Quantity) -->
+		    <!-- Filtering -->
 		    <label for="minQuantity">Min Quantity:</label>
 		    <input type="number" name="minQuantity" class="form-control">
 		    
@@ -45,38 +50,39 @@
 		    <input type="hidden" name="action" value="view">
 		</form>
         
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Quantity</th>
-                <th>Price</th>
-            </tr>
-            <% 
-            List<Item> items = (List<Item>) request.getAttribute("items");
-            if(items != null) {
-                for(Item item : items) {
-            %>
+        <form action="InventoryController" method="post" id="editForm">
+            <table>
                 <tr>
-                    <td><%= item.getId() %></td>
-                    <td><%= item.getName() %></td>
-                    <td><%= item.getDescription() %></td>
-                    <td><%= item.getQuantity() %></td>
-                    <td><%= item.getPrice() %></td>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
                 </tr>
-            <% 
+                <% 
+                List<Item> items = (List<Item>) request.getAttribute("items");
+                if(items != null) {
+                    for(Item item : items) {
+                %>
+                    <tr>
+                        <td><%= item.getId() %></td>
+                        <td><%= item.getName() %></td>
+                        <td><%= item.getDescription() %></td>
+                        <td><%= item.getQuantity() %></td>
+                        <td><%= item.getPrice() %></td>
+                    </tr>
+                <% 
+                    }
+                } else {
+                %>
+                    <tr>
+                        <td colspan="5">No items available</td>
+                    </tr>
+                <% 
                 }
-            } else {
-            %>
-                <tr>
-                    <td colspan="5">No items available</td>
-                </tr>
-            <% 
-            }
-            %>
-        </table>
-        <a class="button" href="index.jsp">Back to Main Menu</a>
+                %>
+            </table>
+        </form>
     </div>
 </body>
 </html>

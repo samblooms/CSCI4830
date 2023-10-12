@@ -12,6 +12,7 @@
         <nav>
             <a class="button" href="add-item.jsp">Add New Item</a>
             <a class="button" href="InventoryController?action=view">View All Items</a>
+            <a class="button" href="InventoryController?action=edit">Edit Items</a>
         </nav>
     </div>
 </body>

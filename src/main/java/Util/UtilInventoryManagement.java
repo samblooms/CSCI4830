@@ -1,68 +1,48 @@
 package Util;
 
-import java.util.List;
-import java.util.Map;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 
-import org.hibernate.SessionFactory;
+import Model.Item;
+import org.hibernate.*;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-
-import Model.Item;
-
-
-import org.hibernate.HibernateException;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 public class UtilInventoryManagement {
-
-	private static SessionFactory sessionFactory;
+    private static SessionFactory sessionFactory;
 
     public static SessionFactory getSessionFactory() {
         if (sessionFactory == null) {
-            // loads configuration and mappings
             Configuration configuration = new Configuration().configure();
-            ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
-
-            // builds a session factory from the service registry
+            ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+                    .applySettings(configuration.getProperties()).build();
             sessionFactory = configuration.buildSessionFactory(serviceRegistry);
         }
-
         return sessionFactory;
     }
 
     public static List<Item> listItems(String sort, String order, String minQuantity, String maxQuantity, String search) {
         List<Item> resultList = new ArrayList<>();
-        Session session = getSessionFactory().openSession();
+        Session session = null;
         Transaction tx = null;
 
         try {
+            session = getSessionFactory().openSession();
             tx = session.beginTransaction();
-            
-            // Using SQL query instead of HQL
-            StringBuilder sql = new StringBuilder("SELECT * FROM items");
 
-            Map<String, Object> parameters = new HashMap<>();
+            // Building the SQL query
+            StringBuilder sql = new StringBuilder("SELECT * FROM items");
 
             List<String> conditions = new ArrayList<>();
             if (search != null && !search.trim().isEmpty()) {
                 conditions.add(" (name like :search or description like :search) ");
-                parameters.put("search", "%" + search + "%");
             }
             if (minQuantity != null && !minQuantity.trim().isEmpty()) {
                 conditions.add(" quantity >= :minQuantity ");
-                parameters.put("minQuantity", Integer.valueOf(minQuantity));
             }
             if (maxQuantity != null && !maxQuantity.trim().isEmpty()) {
                 conditions.add(" quantity <= :maxQuantity ");
-                parameters.put("maxQuantity", Integer.valueOf(maxQuantity));
             }
             if (!conditions.isEmpty()) {
                 sql.append(" WHERE ").append(String.join(" AND ", conditions));
@@ -71,15 +51,22 @@ public class UtilInventoryManagement {
                 sql.append(" ORDER BY ").append(sort).append(" ").append(order);
             }
 
-            // Native SQL query
+            // Creating the SQL query
             SQLQuery query = session.createSQLQuery(sql.toString());
             query.addEntity(Item.class);
-            
-            // Set parameters
-            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                query.setParameter(entry.getKey(), entry.getValue());
+
+            // Setting parameters
+            if (search != null && !search.trim().isEmpty()) {
+                query.setParameter("search", "%" + search + "%");
+            }
+            if (minQuantity != null && !minQuantity.trim().isEmpty()) {
+                query.setParameter("minQuantity", Integer.valueOf(minQuantity));
+            }
+            if (maxQuantity != null && !maxQuantity.trim().isEmpty()) {
+                query.setParameter("maxQuantity", Integer.valueOf(maxQuantity));
             }
 
+            // Getting the results
             resultList = query.list();
 
             tx.commit();
@@ -87,36 +74,97 @@ public class UtilInventoryManagement {
             if (tx != null) tx.rollback();
             e.printStackTrace();
         } finally {
-            session.close();
+            if (session != null) {
+                session.close();
+            }
         }
         return resultList;
     }
 
 
 
-
-
-    public static class InventoryException extends RuntimeException {
-        public InventoryException(String message) {
-            super(message);
-        }
+    public static List<Item> listItems() {
+        return listItems(null, null, null, null, null);
     }
 
-    public static void createItem(String name, String description, int quantity, double price) throws InventoryException {
-        Session session = getSessionFactory().openSession();
+    public static void createItem(String name, String description, int quantity, double price) {
         Transaction tx = null;
-
+        Session session = null;
         try {
+            session = getSessionFactory().openSession();
             tx = session.beginTransaction();
             session.save(new Item(name, description, quantity, price));
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) tx.rollback();
-            throw new InventoryException("Unable to add item to the inventory. Please try again.");
+            e.printStackTrace();
         } finally {
-            session.close();
+            if (session != null) {
+                session.close();
+            }
         }
     }
 
-	   
+    public static void deleteItems(String[] itemIdsToDelete) {
+        Transaction tx = null;
+        Session session = null;
+        try {
+            session = getSessionFactory().openSession();
+            tx = session.beginTransaction();
+            for (String itemIdStr : itemIdsToDelete) {
+                try {
+                    int itemId = Integer.parseInt(itemIdStr);
+                    Item item = (Item) session.get(Item.class, itemId);
+                    session.delete(item);
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+            }
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    public static void updateItemAttribute(int itemId, String attribute, String value) {
+        Transaction tx = null;
+        Session session = null;
+        try {
+            session = getSessionFactory().openSession();
+            tx = session.beginTransaction();
+            Item item = (Item) session.get(Item.class, itemId);
+
+            switch (attribute) {
+                case "name":
+                    item.setName(value);
+                    break;
+                case "description":
+                    item.setDescription(value);
+                    break;
+                case "quantity":
+                    item.setQuantity(Integer.parseInt(value));
+                    break;
+                case "price":
+                    item.setPrice(Double.parseDouble(value));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unexpected attribute: " + attribute);
+            }
+
+            session.update(item);
+            tx.commit();
+        } catch (HibernateException | IllegalArgumentException e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
 }
