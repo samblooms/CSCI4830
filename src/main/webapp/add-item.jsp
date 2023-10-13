@@ -26,7 +26,7 @@
             <input type="text" name="description" required><br>
             
             <label for="quantity">Quantity:</label>
-            <input type="number" name="quantity" required min="1"><br>
+            <input type="number" name="quantity" required min="0"><br>
             
             <label for="price">Price:</label>
             <input type="number" step="0.01" name="price" required min="0"><br>

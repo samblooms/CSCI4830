@@ -47,6 +47,8 @@
 		    
 		    <!-- Submit Button -->
 		    <input type="submit" value="Apply" class="button">
+		     <!-- Reset Filters Button -->
+        	<a class="button" href="InventoryController?action=view">Reset Filters</a>
 		    <input type="hidden" name="action" value="view">
 		</form>
         
